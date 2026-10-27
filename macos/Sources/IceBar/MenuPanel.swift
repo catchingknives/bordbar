@@ -112,10 +112,10 @@ private struct StopCardView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 4) {
                 if isExit {
-                    Image(systemName: "figure.walk.departure").foregroundStyle(Color.accentColor)
+                    Image(systemName: "figure.walk.departure").foregroundStyle(Color.accent)
                 }
                 Text(isExit && title == "Next stop" ? "Next stop · you get off here" : title)
-                    .foregroundStyle(isExit ? Color.accentColor : .secondary)
+                    .foregroundStyle(isExit ? Color.accent : .secondary)
                 Spacer()
                 if let eta = next.eta {
                     Text(eta).font(.caption.weight(.medium)).foregroundStyle(.secondary)
@@ -144,7 +144,7 @@ private struct StopCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .strokeBorder(isExit ? Color.accentColor.opacity(0.4) : .clear, lineWidth: 1.5)
+                .strokeBorder(isExit ? Color.accent.opacity(0.4) : .clear, lineWidth: 1.5)
         )
     }
 }
@@ -162,10 +162,10 @@ private struct RouteBar: View {
                 ZStack(alignment: .leading) {
                     Capsule().fill(.quaternary).frame(height: 4)
                     // Travelled before you got on: faint. Your part so far: full accent.
-                    Capsule().fill(Color.accentColor.opacity(content.hasStart ? 0.3 : 1))
+                    Capsule().fill(Color.accent.opacity(content.hasStart ? 0.3 : 1))
                         .frame(width: max(4, w * progress), height: 4)
                     if content.hasStart {
-                        Capsule().fill(Color.accentColor)
+                        Capsule().fill(Color.accent)
                             .frame(width: max(0, w * (progress - content.startFraction)), height: 4)
                             .offset(x: w * content.startFraction)
                     }
@@ -198,13 +198,13 @@ private struct StopDot: View {
     var body: some View {
         if stop.isStart || stop.isExit {
             Circle()
-                .fill(reached ? Color.accentColor : Color(nsColor: .controlBackgroundColor))
-                .overlay(Circle().strokeBorder(Color.accentColor, lineWidth: 3))
+                .fill(reached ? Color.accent : Color(nsColor: .controlBackgroundColor))
+                .overlay(Circle().strokeBorder(Color.accent, lineWidth: 3))
                 .frame(width: 14, height: 14)
         } else {
             Circle()
-                .fill(reached ? Color.accentColor : Color(nsColor: .controlBackgroundColor))
-                .overlay(Circle().strokeBorder(reached ? Color.accentColor : Color.secondary.opacity(0.5), lineWidth: 1.5))
+                .fill(reached ? Color.accent : Color(nsColor: .controlBackgroundColor))
+                .overlay(Circle().strokeBorder(reached ? Color.accent : Color.secondary.opacity(0.5), lineWidth: 1.5))
                 .frame(width: 8, height: 8)
         }
     }
@@ -236,9 +236,9 @@ private struct StopTimeline: View {
             }
             switch stop.state {
             case .passed:
-                Circle().fill(Color.accentColor.opacity(0.55)).frame(width: 7, height: 7)
+                Circle().fill(Color.accent.opacity(0.55)).frame(width: 7, height: 7)
             case .next:
-                Circle().fill(Color.accentColor).frame(width: 11, height: 11)
+                Circle().fill(Color.accent).frame(width: 11, height: 11)
                     .overlay(Circle().strokeBorder(.background, lineWidth: 2))
             case .upcoming:
                 Circle().strokeBorder(Color.secondary.opacity(0.6), lineWidth: 1.5)
@@ -252,7 +252,7 @@ private struct StopTimeline: View {
     // The line into a stop is "travelled" for passed and next stops; out of it only for passed ones.
     static func lineColor(_ stop: MenuContent.StopRow, upper: Bool) -> Color {
         let travelled = upper ? stop.state != .upcoming : stop.state == .passed
-        return travelled ? Color.accentColor.opacity(0.55) : Color.secondary.opacity(0.25)
+        return travelled ? Color.accent.opacity(0.55) : Color.secondary.opacity(0.25)
     }
 }
 
@@ -268,7 +268,7 @@ private struct StopRowView: View {
     private var marked: Bool { stop.isStart || stop.isExit }
 
     private var nameColor: Color {
-        if marked { return .accentColor }
+        if marked { return .accent }
         return stop.state == .passed ? .secondary : .primary
     }
 
@@ -292,12 +292,12 @@ private struct StopRowView: View {
             Text(stop.name).lineLimit(1).foregroundStyle(nameColor)
             if stop.isStart {
                 Image(systemName: "figure.walk.arrival")
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.accent)
                     .accessibilityLabel("Where you got on")
             }
             if stop.isExit {
                 Image(systemName: "figure.walk.departure")
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.accent)
                     .accessibilityLabel("Where you get off")
             }
             Spacer(minLength: 4)
@@ -381,4 +381,14 @@ private struct OfflineView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
     }
+}
+
+extension Color {
+    /// IceBar's accent instead of the system blue: a green with high contrast on both panel
+    /// backgrounds (emerald 400 on dark, 8.7:1; emerald 700 on light, 5.5:1).
+    static let accent = Color(nsColor: NSColor(name: nil) { appearance in
+        appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            ? NSColor(srgbRed: 0x34 / 255, green: 0xD3 / 255, blue: 0x99 / 255, alpha: 1)
+            : NSColor(srgbRed: 0x04 / 255, green: 0x78 / 255, blue: 0x57 / 255, alpha: 1)
+    })
 }
