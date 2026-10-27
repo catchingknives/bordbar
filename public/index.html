@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IceBar</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #ffffff; --ink: #14161a; --muted: #6b7280; --line: #e3e5ea;
+    --accent: #ec0016; --ok: #138a36; --late: #c2410c; --track: #d6d9df;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0e1013; --card: #171a1f; --ink: #eef0f3; --muted: #8b93a1; --line: #262a31;
+            --accent: #ff3b4e; --ok: #3ccf6b; --late: #fb923c; --track: #2c313a; }
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+         font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+         font-variant-numeric: tabular-nums; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 40px; display: grid; gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+  header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 20px; letter-spacing: -0.01em; }
+  h1 .to { color: var(--muted); font-weight: 500; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--line); font-size: 12px; }
+
+  .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .hero { grid-template-columns: 1fr; } }
+  .speed { display: flex; flex-direction: column; justify-content: center; }
+  .speed .num { font-size: 84px; font-weight: 700; line-height: 1; letter-spacing: -0.04em; }
+  .speed .unit { font-size: 18px; color: var(--muted); margin-left: 6px; font-weight: 500; letter-spacing: 0; }
+  .speed .bar { height: 6px; border-radius: 3px; background: var(--track); margin-top: 14px; overflow: hidden; }
+  .speed .bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .8s ease; }
+  .speed .scale { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin-top: 4px; }
+
+  .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  .next .name { font-size: 22px; font-weight: 650; margin: 4px 0 10px; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; }
+  .kv dt { color: var(--muted); } .kv dd { margin: 0; font-weight: 600; }
+  .late { color: var(--late); } .ontime { color: var(--ok); }
+  .changed { color: var(--late); }
+
+  .route .line { position: relative; height: 34px; margin: 10px 6px 0; }
+  .route .rail { position: absolute; top: 15px; left: 0; right: 0; height: 4px; border-radius: 2px; background: var(--track); }
+  .route .done { position: absolute; top: 15px; left: 0; height: 4px; border-radius: 2px; background: var(--accent); transition: width .8s ease; }
+  .route .stop { position: absolute; top: 10px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%;
+                 background: var(--card); border: 3px solid var(--track); }
+  .route .stop.passed { border-color: var(--accent); background: var(--accent); }
+  .route .train { position: absolute; top: 4px; margin-left: -13px; font-size: 20px; transition: left .8s ease; }
+  .route .ends { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 9px 4px; border-top: 1px solid var(--line); }
+  tr:first-child td { border-top: 0; }
+  td.t { width: 1%; white-space: nowrap; font-weight: 600; }
+  td.d { width: 1%; white-space: nowrap; }
+  td.p { width: 1%; white-space: nowrap; color: var(--muted); text-align: right; }
+  td.k { width: 1%; white-space: nowrap; color: var(--muted); text-align: right; }
+  tr.passed td { color: var(--muted); } tr.passed td.t { font-weight: 400; }
+  tr.next td { font-weight: 650; }
+  tr.next td:first-child { box-shadow: inset 3px 0 0 var(--accent); padding-left: 10px; }
+
+  .reason { color: var(--muted); font-size: 13px; }
+  footer { color: var(--muted); font-size: 12px; text-align: center; }
+  .offline { text-align: center; padding: 48px 20px; }
+  .offline .num { font-size: 56px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <section class="card offline" id="offline" hidden>
+    <div class="num">🚄</div>
+    <h1>Not on ICE WiFi</h1>
+    <p class="meta" id="offlineDetail">iceportal.de is unreachable. Connect to WIFIonICE and this page fills itself.</p>
+  </section>
+
+  <div id="live" hidden>
+    <div style="display:grid;gap:16px">
+      <header>
+        <h1><span id="train">ICE</span> <span class="to">→ <span id="dest">…</span></span></h1>
+        <div class="meta"><span id="series"></span> · <span id="wagon"></span> · WiFi <span id="net" class="pill"></span></div>
+      </header>
+
+      <div class="hero">
+        <section class="card speed">
+          <div class="label">Speed</div>
+          <div><span class="num" id="speed">–</span><span class="unit">km/h</span></div>
+          <div class="bar"><i id="speedBar"></i></div>
+          <div class="scale"><span>0</span><span>150</span><span>300</span></div>
+        </section>
+
+        <section class="card next">
+          <div class="label">Next stop</div>
+          <div class="name" id="nextName">…</div>
+          <dl class="kv">
+            <dt>Arrival</dt><dd id="nextTime">–</dd>
+            <dt>In</dt><dd id="nextIn">–</dd>
+            <dt>Platform</dt><dd id="nextTrack">–</dd>
+            <dt>Distance</dt><dd id="nextKm">–</dd>
+          </dl>
+        </section>
+      </div>
+
+      <section class="card route">
+        <div class="label">Journey · <span id="progressText"></span></div>
+        <div class="line" id="line"><div class="rail"></div><div class="done" id="done"></div></div>
+        <div class="ends"><span id="startName"></span><span id="arriveFinal"></span></div>
+      </section>
+
+      <section class="card">
+        <table id="stops"></table>
+        <p class="reason" id="reasons"></p>
+      </section>
+    </div>
+  </div>
+
+  <footer id="footer">Waiting for data…</footer>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const MAX_SPEED = 300;
+let status = null, trip = null, lastStatusAt = 0;
+
+const hhmm = ms => ms ? new Date(ms).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }) : "–";
+const km = m => (m / 1000).toFixed(m < 10000 ? 1 : 0) + " km";
+const delayMin = d => d ? parseInt(d, 10) || 0 : 0;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+async function getJson(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  const body = await res.json();
+  if (!res.ok) throw new Error(body.error || res.status);
+  return body;
+}
+
+// The portal's own actualPosition field lags badly; last stop's offset plus distance since it does not.
+function positionMeters(t) {
+  const last = t.stops.find(s => s.station.evaNr === t.stopInfo.actualLast);
+  const next = t.stops.find(s => s.station.evaNr === t.stopInfo.actualNext);
+  let pos = (last ? last.info.distanceFromStart : 0) + (t.distanceFromLastStop || 0);
+  if (next) pos = Math.min(pos, next.info.distanceFromStart);
+  return Math.min(pos, t.totalDistance);
+}
+
+function arrival(s) {
+  const tt = s.timetable;
+  return tt.actualArrivalTime || tt.scheduledArrivalTime || tt.actualDepartureTime || tt.scheduledDepartureTime;
+}
+
+function delayHtml(d) {
+  const n = delayMin(d);
+  if (!d) return "";
+  return `<span class="${n > 0 ? "late" : "ontime"}">${esc(d)}</span>`;
+}
+
+function renderStatus() {
+  if (!status) return;
+  $("speed").textContent = Math.round(status.speed);
+  $("speedBar").style.width = Math.min(100, status.speed / MAX_SPEED * 100) + "%";
+  $("train").textContent = `${status.trainType} ${status.vzn}`;
+  $("series").textContent = `BR ${status.series} · Tz ${status.tzn.replace(/^ICE0*/, "")}`;
+  $("wagon").textContent = status.wagonClass === "FIRST" ? "1st class" : "2nd class";
+  $("net").textContent = status.internet.toLowerCase();
+}
+
+function renderTrip() {
+  if (!trip) return;
+  const t = trip, stops = t.stops, total = t.totalDistance;
+  const pos = positionMeters(t);
+  const next = stops.find(s => s.station.evaNr === t.stopInfo.actualNext);
+  const final = stops[stops.length - 1];
+
+  $("dest").textContent = t.stopInfo.finalStationName;
+  $("startName").textContent = stops[0].station.name;
+  $("arriveFinal").textContent = `${final.station.name} ${hhmm(arrival(final))}`;
+  $("progressText").textContent = `${km(pos)} of ${km(total)} · ${Math.round(pos / total * 100)}%`;
+
+  if (next) {
+    const tt = next.timetable, at = arrival(next);
+    $("nextName").textContent = next.station.name;
+    $("nextTime").innerHTML = `${hhmm(at)} ${delayHtml(tt.arrivalDelay)}`;
+    const mins = Math.round((at - Date.now()) / 60000);
+    $("nextIn").textContent = mins > 0 ? `${mins} min` : "arriving";
+    const tr = next.track, changed = tr.actual && tr.scheduled && tr.actual !== tr.scheduled;
+    $("nextTrack").innerHTML = changed ? `<span class="changed">${esc(tr.actual)}</span> (was ${esc(tr.scheduled)})` : esc(tr.actual || tr.scheduled || "–");
+    $("nextKm").textContent = km(Math.max(0, next.info.distanceFromStart - pos));
+  }
+
+  // Route line: stop dots at their real distance, the train at its computed position.
+  const line = $("line");
+  line.querySelectorAll(".stop,.train").forEach(n => n.remove());
+  for (const s of stops) {
+    const dot = document.createElement("div");
+    dot.className = "stop" + (s.info.distanceFromStart <= pos ? " passed" : "");
+    dot.style.left = (s.info.distanceFromStart / total * 100) + "%";
+    dot.title = s.station.name;
+    line.appendChild(dot);
+  }
+  const train = document.createElement("div");
+  train.className = "train"; train.textContent = "🚄";
+  train.style.left = (pos / total * 100) + "%";
+  line.appendChild(train);
+  $("done").style.width = (pos / total * 100) + "%";
+
+  $("stops").innerHTML = stops.map(s => {
+    const tt = s.timetable, tr = s.track;
+    const cls = s.station.evaNr === t.stopInfo.actualNext ? "next" : s.info.passed ? "passed" : "";
+    const time = tt.scheduledArrivalTime || tt.scheduledDepartureTime;
+    const delay = tt.arrivalDelay || tt.departureDelay;
+    const changed = tr.actual && tr.scheduled && tr.actual !== tr.scheduled;
+    return `<tr class="${cls}">
+      <td class="t">${hhmm(time)}</td>
+      <td class="d">${delayHtml(delay)}</td>
+      <td>${esc(s.station.name)}</td>
+      <td class="k">${Math.round(s.info.distanceFromStart / 1000)} km</td>
+      <td class="p ${changed ? "changed" : ""}">Gl. ${esc(tr.actual || tr.scheduled || "–")}</td>
+    </tr>`;
+  }).join("");
+
+  const reasons = [...new Set(stops.flatMap(s => (s.delayReasons || []).map(r => r.text)))];
+  $("reasons").textContent = reasons.length ? "Delay reason: " + reasons.join("; ") : "";
+}
+
+function setOnline(ok, detail) {
+  $("live").hidden = !ok;
+  $("offline").hidden = ok;
+  if (!ok && detail) $("offlineDetail").textContent = detail;
+}
+
+async function pollStatus() {
+  try {
+    status = await getJson("/api/status");
+    lastStatusAt = Date.now();
+    setOnline(true);
+    renderStatus();
+  } catch (e) {
+    setOnline(false, `iceportal.de is unreachable (${e.message}). Connect to WIFIonICE and this page fills itself.`);
+  }
+}
+
+async function pollTrip() {
+  try { trip = (await getJson("/api/trip")).trip; renderTrip(); } catch (e) { console.error("trip", e); }
+}
+
+function tick() {
+  const age = lastStatusAt ? Math.round((Date.now() - lastStatusAt) / 1000) : null;
+  $("footer").textContent = age === null ? "Waiting for data…" :
+    `Updated ${age}s ago · GPS ${status.gpsStatus.toLowerCase()} · ${status.latitude.toFixed(4)}, ${status.longitude.toFixed(4)}`;
+}
+
+pollStatus(); pollTrip();
+setInterval(pollStatus, 3000);
+setInterval(pollTrip, 20000);
+setInterval(tick, 1000);
+setInterval(renderTrip, 30000); // keeps the "in N min" countdown moving between trip polls
+</script>
+</body>
+</html>
