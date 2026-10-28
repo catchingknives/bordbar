@@ -2,9 +2,9 @@
 import PackageDescription
 
 let package = Package(
-    name: "IceBar",
+    name: "Bordbar",
     platforms: [.macOS(.v14)],
     targets: [
-        .executableTarget(name: "IceBar", path: "Sources/IceBar")
+        .executableTarget(name: "Bordbar", path: "Sources/Bordbar")
     ]
 )

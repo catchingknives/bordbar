@@ -1,4 +1,4 @@
-# IceBar
+# Bordbar
 
 Train speed in the macOS menu bar, trip details on click, from the ICE onboard portal (only reachable on WIFIonICE). API notes: `API.md`.
 
@@ -6,13 +6,13 @@ Unofficial. Not affiliated with or endorsed by Deutsche Bahn; it reads an undocu
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">
-  <img src="docs/screenshot-light.png" width="320" alt="IceBar panel: speed, next stop, your stop, route bar and stop list on an ICE from Hamburg to Stuttgart">
+  <img src="docs/screenshot-light.png" width="320" alt="Bordbar panel: speed, next stop, your stop, route bar and stop list on an ICE from Hamburg to Stuttgart">
 </picture>
 
 <sub>Screenshot with made-up trip data.</sub>
 
-- **Menu bar app:** `macos/build-app.sh`, then `open macos/dist/IceBar.app`. Test paths: `IceBar --once` prints the menu contents, `IceBar --render <dir>` writes the panel as light and dark PNGs, `--fixtures fixtures` uses saved responses instead of the train.
-- **Your stops:** click a stop behind you to mark where you got on, one ahead for where you get off; click a marked stop again to clear it. The km, km-to-go and percent figures cover only that part; the bar still shows the whole route. Saved per train (date + train number). Test path: `IceBar --once --click <evaNr>`.
+- **Menu bar app:** `macos/build-app.sh`, then `open macos/dist/Bordbar.app`. Test paths: `Bordbar --once` prints the menu contents, `Bordbar --render <dir>` writes the panel as light and dark PNGs, `--fixtures fixtures` uses saved responses instead of the train.
+- **Your stops:** click a stop behind you to mark where you got on, one ahead for where you get off; click a marked stop again to clear it. The km, km-to-go and percent figures cover only that part; the bar still shows the whole route. Saved per train (date + train number). Test path: `Bordbar --once --click <evaNr>`.
 - **Web POC:** `bun server.ts` (live) or `bun server.ts --demo` (saved responses), on http://localhost:8788.
 
 ## Gotchas

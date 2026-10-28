@@ -1,7 +1,7 @@
 import Foundation
 
 /// Everything the menu bar shows, worked out from the two portal responses.
-/// Pure, so `IceBar --once` prints exactly what the menu renders.
+/// Pure, so `Bordbar --once` prints exactly what the menu renders.
 struct MenuContent {
     /// A stop worth a card: the next one, and the one you marked to get off at.
     struct StopCard {

@@ -22,7 +22,7 @@ Only reachable on WIFIonICE. No auth, no CORS headers.
 
 - `status.connectivity.{currentState, nextState, remainingTimeSeconds}`: an internet forecast ("WiFi drops to WEAK in 120 s"). onboardapis reads it; it was absent from our status response, so it is train- or route-dependent.
 - `status.bapInstalled`: whether at-seat service exists on this train (absent from ours).
-- `trip.actualPosition`: unreliable. Read 8.5 km while the train was 60+ km past Südkreuz. onboardapis computes position as `actualPosition + distanceFromLastStop`, which would also have been wrong here; IceBar uses the last stop's `distanceFromStart + distanceFromLastStop`.
+- `trip.actualPosition`: unreliable. Read 8.5 km while the train was 60+ km past Südkreuz. onboardapis computes position as `actualPosition + distanceFromLastStop`, which would also have been wrong here; Bordbar uses the last stop's `distanceFromStart + distanceFromLastStop`.
 - `trip.stopInfo.actualNext / actualLast / finalStationName`: reliable.
 - Times are epoch milliseconds; delays are strings like `"+2"` or `""`.
 

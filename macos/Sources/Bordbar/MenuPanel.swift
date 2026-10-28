@@ -384,7 +384,7 @@ private struct OfflineView: View {
 }
 
 extension Color {
-    /// IceBar's accent instead of the system blue: a green with high contrast on both panel
+    /// Bordbar's accent instead of the system blue: a green with high contrast on both panel
     /// backgrounds (emerald 400 on dark, 8.7:1; emerald 700 on light, 5.5:1).
     static let accent = Color(nsColor: NSColor(name: nil) { appearance in
         appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua

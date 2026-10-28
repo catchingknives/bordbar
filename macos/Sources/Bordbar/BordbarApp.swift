@@ -46,7 +46,7 @@ enum Entry {
             renderer.scale = 2
             guard let image = renderer.nsImage, let tiff = image.tiffRepresentation,
                   let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else { continue }
-            let url = dir.appendingPathComponent("icebar-menu-\(name).png")
+            let url = dir.appendingPathComponent("bordbar-menu-\(name).png")
             try? png.write(to: url)
             print(url.path)
         }
@@ -166,7 +166,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Template symbol, so the system tints it for light, dark and selected menu bars.
-        let symbol = NSImage(systemSymbolName: "train.side.front.car", accessibilityDescription: "IceBar")
+        let symbol = NSImage(systemSymbolName: "train.side.front.car", accessibilityDescription: "Bordbar")
         symbol?.isTemplate = true
         item.button?.image = symbol
         item.button?.imagePosition = .imageLeading
@@ -197,7 +197,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(panel)
 
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: "Quit IceBar", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let quit = NSMenuItem(title: "Quit Bordbar", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.target = NSApp
         menu.addItem(quit)
     }

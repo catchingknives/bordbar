@@ -1,4 +1,4 @@
-// IceBar POC: serves the page and proxies the ICE onboard portal API,
+// Bordbar POC: serves the page and proxies the ICE onboard portal API,
 // which sends no CORS headers and so cannot be fetched from the browser directly.
 // Usage: bun server.ts [--demo] [--port 8788]
 
@@ -41,4 +41,4 @@ Bun.serve({
   },
 });
 
-console.log(`IceBar on http://localhost:${port}${demo ? " (demo data)" : ""}`);
+console.log(`Bordbar on http://localhost:${port}${demo ? " (demo data)" : ""}`);
