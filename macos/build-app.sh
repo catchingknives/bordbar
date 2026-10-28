@@ -1,16 +1,25 @@
 #!/bin/zsh
 # Builds Bordbar.app into dist/. Ad-hoc signed, runs locally.
+# `--universal` builds for Apple silicon and Intel (for releases); default is this Mac only.
 set -e
 cd "$(dirname "$0")"
 # Swift 6.4's default build system fails here with "Unknown error parsing property list"
-# (Command Line Tools only, no Xcode; 2026-10-27). The native one works.
+# (Command Line Tools only, no Xcode; 2026-10-27). The native one works, but cannot take
+# two --arch flags, so a universal build is two builds joined with lipo.
 setopt pipefail
-rm -f .build/release/Bordbar   # never package a stale binary when the build fails
-swift build -c release --build-system native 2>&1 | grep -v "has been deprecated"
+triples=("$(uname -m)-apple-macosx14.0")
+[[ "$1" == "--universal" ]] && triples=(arm64-apple-macosx14.0 x86_64-apple-macosx14.0)
+bins=()
+for triple in $triples; do
+    bin=".build/${triple%14.0}/release/Bordbar"
+    rm -f "$bin"   # never package a stale binary when the build fails
+    swift build -c release --build-system native --triple "$triple" 2>&1 | grep -v "has been deprecated"
+    bins+=("$bin")
+done
 APP="dist/Bordbar.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS"
-cp .build/release/Bordbar "$APP/Contents/MacOS/Bordbar"
+lipo -create -output "$APP/Contents/MacOS/Bordbar" $bins
 # LSUIElement: menu bar only, no Dock icon and no app menu.
 cat > "$APP/Contents/Info.plist" <<'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
